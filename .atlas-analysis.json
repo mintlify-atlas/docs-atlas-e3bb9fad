@@ -1,0 +1,48 @@
+{
+  "projectType": "frontend",
+  "projectName": "Tab Closer",
+  "projectDescription": "A Chrome extension that automatically manages and closes tabs when they exceed a user-defined limit",
+  "theme": "almond",
+  "primaryColor": "#63B8EE",
+  "lightColor": "#BEE2F9",
+  "darkColor": "#3866A3",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": [
+          "introduction",
+          "installation"
+        ]
+      },
+      {
+        "group": "User Guide",
+        "pages": [
+          "guides/getting-started",
+          "guides/configuration",
+          "guides/how-it-works"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/architecture",
+          "development/contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Automatic tab management based on configurable limits",
+    "Toggle switch to enable/disable tab closing",
+    "Configurable maximum tab count (minimum 2 tabs)",
+    "Real-time tab monitoring and cleanup",
+    "Simple popup interface for easy configuration"
+  ],
+  "publicApiSurface": [
+    "chrome.tabs.onCreated event listener",
+    "chrome.storage.local (fs: boolean, tabsallow: number)",
+    "chrome.tabs.query() - Query all open tabs",
+    "chrome.tabs.remove() - Close excess tabs"
+  ]
+}
