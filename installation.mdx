@@ -1,0 +1,275 @@
+---
+title: Installation
+description: Get Tab Closer installed and configured in your Chrome browser
+---
+
+# Installing Tab Closer
+
+Tab Closer can be installed through the Chrome Web Store or manually loaded as an unpacked extension for development purposes.
+
+## Chrome Web Store Installation
+
+<Steps>
+  <Step title="Visit the Chrome Web Store">
+    Navigate to the Tab Closer extension page in the Chrome Web Store.
+    
+    <Info>
+    This is the recommended installation method for most users, as updates will be automatically delivered.
+    </Info>
+  </Step>
+  
+  <Step title="Add to Chrome">
+    Click the **Add to Chrome** button in the top right corner of the extension page.
+    
+    Chrome will display a permission prompt showing the permissions Tab Closer requires:
+    - **tabs** - To monitor and close tabs
+    - **storage** - To save your preferences
+  </Step>
+  
+  <Step title="Confirm Installation">
+    Click **Add extension** in the permission dialog to complete the installation.
+    
+    The Tab Closer icon will appear in your Chrome toolbar.
+  </Step>
+  
+  <Step title="Pin the Extension (Optional)">
+    For easy access, click the puzzle piece icon in your toolbar and pin Tab Closer.
+    
+    This keeps the extension icon visible at all times.
+  </Step>
+</Steps>
+
+## Manual Installation (Developer Mode)
+
+If you're developing the extension or want to install it from source, follow these steps:
+
+<Steps>
+  <Step title="Download the Source Code">
+    Download or clone the Tab Closer source code to your local machine.
+    
+    ```bash
+    git clone <repository-url>
+    cd tab-closer
+    ```
+    
+    Ensure you have all the necessary files:
+    - `manifest.json`
+    - `background.js`
+    - `popup.html`
+    - `script.js`
+    - `style.css`
+    - `images/` directory with icon assets
+  </Step>
+  
+  <Step title="Enable Developer Mode">
+    Open Chrome and navigate to the extensions page:
+    
+    ```
+    chrome://extensions
+    ```
+    
+    Toggle the **Developer mode** switch in the top right corner.
+    
+    <Warning>
+    Developer mode allows loading unpacked extensions. Only load extensions from sources you trust.
+    </Warning>
+  </Step>
+  
+  <Step title="Load the Extension">
+    Click the **Load unpacked** button that appears after enabling Developer mode.
+    
+    Browse to the directory containing the Tab Closer source files and select it.
+  </Step>
+  
+  <Step title="Verify Installation">
+    The extension should now appear in your extensions list with the Tab Closer icon and details:
+    
+    - **Name**: Tab Closer
+    - **Version**: 1.0.1
+    - **Description**: Chrome Extension to close all tabs you are not using.
+    
+    <Info>
+    Manually loaded extensions will display a "Unpacked" label to distinguish them from Web Store installations.
+    </Info>
+  </Step>
+</Steps>
+
+## Initial Configuration
+
+Once installed, configure Tab Closer to match your preferences:
+
+<Steps>
+  <Step title="Open the Extension Popup">
+    Click the Tab Closer icon in your Chrome toolbar to open the configuration popup.
+    
+    The popup displays the following interface:
+    
+    ```html
+    <h4>Tab Closer Chrome Extension</h4>
+    <div class="flipswitch">
+        <input type="checkbox" name="flipswitch" class="flipswitch-cb" id="fs" checked>
+        <label class="flipswitch-label" for="fs">
+            <div class="flipswitch-inner"></div>
+            <div class="flipswitch-switch"></div>
+        </label>
+    </div>
+    <h5>Cantidad de Tabs permitidas (2+)</h5>
+    <input type="number" class="css-input" id="tabsallow"/>
+    <button class="testbutton" id="button">Save</button>
+    ```
+  </Step>
+  
+  <Step title="Enable Automatic Tab Management">
+    Toggle the switch at the top of the popup to enable or disable automatic tab closing.
+    
+    - **Enabled** (default): Tab Closer will automatically manage your tabs
+    - **Disabled**: Tab Closer will not close any tabs
+    
+    <Note>
+    The toggle state is saved using Chrome's local storage API and persists across browser sessions.
+    </Note>
+  </Step>
+  
+  <Step title="Set Your Tab Limit">
+    Enter the maximum number of tabs you want to keep open in the number input field.
+    
+    **Requirements:**
+    - Minimum value: 2 tabs
+    - Must be a positive integer
+    
+    The validation logic ensures you maintain at least 2 tabs:
+    
+    ```javascript
+    function save() {
+      const tabsallow = document.getElementById('tabsallow').value;
+      if(tabsallow >= 2){
+        chrome.storage.local.set({ fs: checkbox.checked }).then(() => {
+          chrome.storage.local.set({ tabsallow: tabsallow }).then(() => {
+            document.getElementById("labelverde").style.visibility="visible";
+          });
+        });
+      } else {
+        alert('La cantidad debe ser mayor que uno!')
+      }
+    }
+    ```
+    
+    <Warning>
+    If you enter a value less than 2, you'll see an alert: "La cantidad debe ser mayor que uno!" (The quantity must be greater than one!)
+    </Warning>
+  </Step>
+  
+  <Step title="Save Your Settings">
+    Click the **Save** button to persist your configuration.
+    
+    A green "Saved!" confirmation message will appear when your settings are successfully stored.
+    
+    <Info>
+    Your settings are stored locally and will be applied immediately. The background service worker will begin monitoring tab creation based on your configuration.
+    </Info>
+  </Step>
+</Steps>
+
+## Verifying Installation
+
+To confirm Tab Closer is working correctly:
+
+1. **Check the extension is enabled** - Ensure the toggle in the popup is switched on
+2. **Set a low tab limit** - Try setting the limit to 3 or 4 tabs for testing
+3. **Open multiple tabs** - Open more tabs than your configured limit
+4. **Observe automatic closing** - The oldest tabs should automatically close when you exceed your limit
+
+<Note>
+Tab Closer uses a background service worker to monitor tab events. The service worker activates when tabs are created:
+
+```javascript
+chrome.tabs.onCreated.addListener(function (tab) {
+    chrome.tabs.query({}, function (tabs) {
+        // Validation and tab closing logic
+    });
+});
+```
+</Note>
+
+## Troubleshooting
+
+<CardGroup cols={1}>
+  <Card title="Extension Not Closing Tabs" icon="circle-exclamation" color="#3866A3">
+    **Possible causes:**
+    - The toggle switch is disabled - enable it in the popup
+    - Tab limit is set too high - verify your configured limit
+    - Settings weren't saved - click Save after making changes
+    
+    **Solution:** Open the popup, verify your settings, and click Save again.
+  </Card>
+  
+  <Card title="Cannot Set Tab Limit Below 2" icon="triangle-exclamation" color="#63B8EE">
+    **This is intentional behavior.** Tab Closer requires a minimum of 2 tabs to prevent closing all your tabs accidentally.
+    
+    The validation is enforced in the save function at `/home/daytona/workspace/source/script.js:9`.
+  </Card>
+  
+  <Card title="Extension Icon Not Visible" icon="eye-slash" color="#3866A3">
+    **Solution:** The extension may be hidden in the extensions menu. Click the puzzle piece icon in your toolbar and pin Tab Closer for easy access.
+  </Card>
+  
+  <Card title="Settings Not Persisting" icon="floppy-disk" color="#63B8EE">
+    **Possible causes:**
+    - Storage permissions issue
+    - Browser storage quota exceeded
+    
+    **Solution:** 
+    1. Check that the extension has storage permissions at `chrome://extensions`
+    2. Try clearing browser storage and reconfiguring
+    3. Reinstall the extension if the issue persists
+  </Card>
+</CardGroup>
+
+## Manifest Configuration
+
+Tab Closer is built with Chrome Extension Manifest V3:
+
+```json
+{
+    "manifest_version": 3,
+    "name": "Tab Closer",
+    "version": "1.0.1",
+    "description": "Chrome Extension to close all tabs you are not using.",
+    "permissions": [
+        "tabs",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_icon": {
+            "48": "images/48.png"
+        },
+        "default_title": "Tab Closer",
+        "default_popup": "popup.html"
+    }
+}
+```
+
+<Info>
+**Manifest V3** is the latest version of Chrome's extension platform, offering improved security, privacy, and performance compared to Manifest V2.
+</Info>
+
+## Next Steps
+
+Now that Tab Closer is installed and configured, you can:
+
+- Adjust your tab limit based on your browsing habits
+- Toggle the extension on/off as needed for different workflows
+- Experiment with different limits to find your optimal setting
+
+<Note>
+Tab Closer works silently in the background. You can browse normally, and older tabs will be automatically closed when you exceed your configured limit.
+</Note>
+
+---
+
+<Warning>
+**Remember:** Tab Closer permanently closes tabs. Make sure to bookmark important pages or use Chrome's "Bookmark All Tabs" feature before enabling aggressive tab limits.
+</Warning>

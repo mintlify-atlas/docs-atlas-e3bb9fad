@@ -1,0 +1,119 @@
+---
+title: Introduction
+description: Keep your browser organized by automatically managing your open tabs
+---
+
+# Welcome to Tab Closer
+
+Tab Closer is a lightweight Chrome extension designed to help you maintain a clean and organized browsing experience by automatically limiting the number of open tabs in your browser.
+
+## What is Tab Closer?
+
+Tab Closer is a Chrome extension that automatically closes older tabs when you exceed your configured tab limit. Instead of manually managing dozens of open tabs, Tab Closer does the work for you by keeping only your most recently opened tabs active.
+
+<Note>
+Tab Closer uses a "first in, first out" (FIFO) approach - when you open a new tab that exceeds your limit, the oldest tabs are automatically closed.
+</Note>
+
+## Key Benefits
+
+<CardGroup cols={2}>
+  <Card title="Improved Performance" icon="gauge-high" color="#63B8EE">
+    Reduce browser memory usage by limiting open tabs, resulting in faster performance and smoother browsing.
+  </Card>
+  
+  <Card title="Better Focus" icon="bullseye" color="#3866A3">
+    Stay focused on what matters by preventing tab overload and reducing digital clutter.
+  </Card>
+  
+  <Card title="Automatic Management" icon="wand-magic-sparkles" color="#63B8EE">
+    Set it once and forget it - Tab Closer works silently in the background to manage your tabs.
+  </Card>
+  
+  <Card title="Customizable Limits" icon="sliders" color="#3866A3">
+    Choose your ideal tab limit (minimum 2 tabs) to match your browsing style and workflow.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Tab Closer operates through a simple background service worker that monitors your browsing activity:
+
+1. **Enable the extension** - Toggle the switch in the popup to activate automatic tab management
+2. **Set your limit** - Configure how many tabs you want to keep open (minimum 2)
+3. **Browse normally** - Tab Closer automatically closes the oldest tabs when you exceed your limit
+
+<Info>
+The extension requires at least 2 tabs to be configured. This ensures you always have a minimum number of tabs available for your browsing needs.
+</Info>
+
+## Core Functionality
+
+The extension's background service worker monitors tab creation events:
+
+```javascript
+chrome.tabs.onCreated.addListener(function (tab) {
+    chrome.tabs.query({}, function (tabs) {
+        // Check if automatic management is enabled
+        chrome.storage.local.get('fs', function (result) {
+            fs = result.fs;
+            if (fs) {
+                // Get configured tab limit
+                chrome.storage.local.get('tabsallow', function (result) {
+                    cantidadTabs = result.tabsallow;
+                    if (cantidadTabs >= 2) {
+                        if (tabs.length > cantidadTabs) {
+                            // Close oldest tabs
+                            for (let i = 0; i < tabs.length - cantidadTabs; i++) {
+                                chrome.tabs.remove(tabs[i].id, function () { });
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+});
+```
+
+## Use Cases
+
+**For Power Users**
+- Maintain a lean browsing environment while researching or multitasking
+- Prevent browser slowdown from having too many tabs open
+
+**For Productivity Enthusiasts**
+- Reduce distraction by limiting the number of concurrent tasks
+- Force yourself to close or bookmark tabs before moving on
+
+**For Memory-Conscious Users**
+- Keep browser memory usage under control on systems with limited RAM
+- Prevent browser crashes from excessive tab usage
+
+## Privacy & Permissions
+
+Tab Closer requires minimal permissions to function:
+
+<CardGroup cols={2}>
+  <Card title="tabs" icon="window-restore">
+    Required to monitor tab creation events and close tabs when limits are exceeded.
+  </Card>
+  
+  <Card title="storage" icon="database">
+    Used to store your preferences locally (enable/disable state and tab limit).
+  </Card>
+</CardGroup>
+
+<Warning>
+All settings are stored locally in your browser. Tab Closer does not collect, transmit, or store any browsing data externally.
+</Warning>
+
+## Getting Started
+
+Ready to take control of your tabs? Head over to the [Installation Guide](/installation) to get Tab Closer up and running in minutes.
+
+---
+
+<Info>
+Tab Closer is built with Manifest V3, ensuring compatibility with modern Chrome security and performance standards.
+</Info>

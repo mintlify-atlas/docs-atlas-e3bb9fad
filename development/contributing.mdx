@@ -1,0 +1,522 @@
+---
+title: 'Contributing Guide'
+description: 'How to contribute to the Tab Closer Chrome extension project'
+---
+
+## Welcome Contributors!
+
+Thank you for your interest in contributing to Tab Closer! This guide will help you get started with development, testing, and submitting contributions.
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork the Repository">
+    Create a fork of the Tab Closer repository on GitHub to your personal account
+  </Step>
+  <Step title="Clone Your Fork">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/tab-closer.git
+    cd tab-closer
+    ```
+  </Step>
+  <Step title="Load Extension in Chrome">
+    See the [Development Setup](#development-setup) section below
+  </Step>
+  <Step title="Make Your Changes">
+    Create a new branch, make changes, and test thoroughly
+  </Step>
+  <Step title="Submit Pull Request">
+    Push your changes and open a PR with a clear description
+  </Step>
+</Steps>
+
+## Development Setup
+
+### Loading the Extension Locally
+
+<Steps>
+  <Step title="Enable Developer Mode">
+    1. Open Chrome and navigate to `chrome://extensions/`
+    2. Toggle "Developer mode" ON in the top-right corner
+  </Step>
+  <Step title="Load Unpacked Extension">
+    1. Click "Load unpacked" button
+    2. Select the directory containing the extension files (where `manifest.json` is located)
+  </Step>
+  <Step title="Verify Installation">
+    The Tab Closer extension should now appear in your extensions list and toolbar
+  </Step>
+</Steps>
+
+<Info>
+  After making code changes, click the refresh icon on the extension card in `chrome://extensions/` to reload the extension.
+</Info>
+
+### Development Tools
+
+You'll need:
+
+- **Chrome Browser**: Version 88 or higher (for Manifest V3 support)
+- **Text Editor**: VS Code, Sublime Text, or your preferred editor
+- **Git**: For version control
+- **DevTools**: Built into Chrome for debugging
+
+<Note>
+  No build process is required! This extension uses vanilla JavaScript and can be loaded directly.
+</Note>
+
+## Project Structure
+
+Understanding the codebase organization:
+
+```plaintext
+tab-closer/
+├── manifest.json          # Extension metadata and configuration
+├── background.js          # Service worker (tab management logic)
+├── popup.html            # Extension popup UI
+├── script.js             # Popup interaction logic
+├── style.css             # Popup styling
+└── images/
+    └── 48.png            # Extension icon (48x48px)
+```
+
+### File Responsibilities
+
+<Accordion title="manifest.json - Configuration">
+  Defines extension metadata, permissions, and entry points. Modify this when:
+  - Adding new permissions
+  - Changing version number
+  - Adding new background scripts or content scripts
+  - Updating extension description or name
+</Accordion>
+
+<Accordion title="background.js - Core Logic">
+  Service worker that runs in the background. This file:
+  - Listens for `chrome.tabs.onCreated` events
+  - Queries tab counts using `chrome.tabs.query()`
+  - Retrieves settings from `chrome.storage.local`
+  - Closes excess tabs using `chrome.tabs.remove()`
+  
+  Edit this file to change tab management behavior.
+</Accordion>
+
+<Accordion title="popup.html - User Interface">
+  The HTML structure for the extension popup. Contains:
+  - Toggle switch (flipswitch) for enabling/disabling
+  - Number input for setting tab limit
+  - Save button
+  - Success message
+  
+  Modify to change UI layout or add new controls.
+</Accordion>
+
+<Accordion title="script.js - Popup Logic">
+  JavaScript for popup interactions. Handles:
+  - Loading saved settings on popup open
+  - Saving user settings to `chrome.storage.local`
+  - Input validation (minimum 2 tabs)
+  - Success message display
+  
+  Edit to add new settings or validation logic.
+</Accordion>
+
+<Accordion title="style.css - Styling">
+  CSS for popup appearance. Includes:
+  - Custom toggle switch (flipswitch) styling
+  - Button styles
+  - Input field styles
+  - Layout and spacing
+  
+  Modify to change colors, sizes, or visual design.
+</Accordion>
+
+## Development Workflow
+
+### Making Changes
+
+<Steps>
+  <Step title="Create Feature Branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+    Use descriptive branch names like `feature/add-whitelist` or `fix/tab-order-bug`
+  </Step>
+  <Step title="Make Code Changes">
+    Edit the relevant files using your text editor
+  </Step>
+  <Step title="Reload Extension">
+    - Go to `chrome://extensions/`
+    - Click the refresh icon on the Tab Closer card
+    - Or use Ctrl+R (Cmd+R on Mac) in the extensions page
+  </Step>
+  <Step title="Test Thoroughly">
+    See [Testing Your Changes](#testing-your-changes) section
+  </Step>
+</Steps>
+
+### Testing Your Changes
+
+<Warning>
+  Always test your changes thoroughly before submitting a PR. Extension bugs can affect user browsing experience.
+</Warning>
+
+#### Manual Testing Checklist
+
+- [ ] **Popup loads correctly**: Click extension icon, verify UI appears
+- [ ] **Settings persist**: Configure settings, close popup, reopen to verify values saved
+- [ ] **Toggle works**: Test ON and OFF states
+- [ ] **Tab limit enforced**: Open multiple tabs, verify oldest tabs close when limit exceeded
+- [ ] **Minimum validation**: Try setting tab limit to 1 or 0, verify alert appears
+- [ ] **No console errors**: Check DevTools console for both service worker and popup
+- [ ] **Edge cases**: Test with exactly 2 tabs, test with many tabs (50+)
+
+#### Debugging the Service Worker
+
+```javascript background.js
+// Add console.log statements for debugging
+chrome.tabs.onCreated.addListener(function (tab) {
+    console.log('New tab created:', tab.id);
+    chrome.tabs.query({}, function (tabs) {
+        console.log('Total tabs:', tabs.length);
+        // ... rest of logic
+    });
+});
+```
+
+To view service worker logs:
+1. Navigate to `chrome://extensions/`
+2. Click "Inspect views: service worker"
+3. Check the Console tab
+
+#### Debugging the Popup
+
+```javascript script.js
+// Add console.log for debugging
+function save() {
+  const tabsallow = document.getElementById('tabsallow').value;
+  console.log('Saving tabsallow:', tabsallow);
+  // ... rest of logic
+}
+```
+
+To view popup logs:
+1. Open the extension popup
+2. Right-click inside popup → Inspect
+3. Check the Console tab
+
+## Code Style Guidelines
+
+### JavaScript Style
+
+<Accordion title="Naming Conventions">
+  - Use `camelCase` for variables and functions: `tabsallow`, `save()`
+  - Use descriptive names: `cantidadTabs` is clear, `ct` is not
+  - Use `const` for constants, `let` for variables that change
+</Accordion>
+
+<Accordion title="Code Formatting">
+  - Indent with 2 or 4 spaces (be consistent)
+  - Add spaces around operators: `if (tabs.length > cantidadTabs)`
+  - Use semicolons at end of statements
+  - Add comments for complex logic
+</Accordion>
+
+<Accordion title="Error Handling">
+  - Always wrap Chrome API calls that might fail in try-catch
+  - Log errors to console for debugging
+  
+  ```javascript
+  try {
+      chrome.tabs.remove(tabs[i].id, function () { });
+  } catch (error) {
+      console.log(error);
+  }
+  ```
+</Accordion>
+
+### HTML/CSS Style
+
+- Use semantic HTML elements
+- Keep inline styles minimal (use CSS classes instead)
+- Maintain consistent indentation
+- Use descriptive class names: `.flipswitch` not `.fs`
+
+## Common Development Tasks
+
+### Adding a New Setting
+
+<Steps>
+  <Step title="Add UI Element in popup.html">
+    ```html
+    <input type="text" class="css-input" id="new-setting"/>
+    ```
+  </Step>
+  <Step title="Update script.js save() function">
+    ```javascript
+    function save() {
+      const newSetting = document.getElementById('new-setting').value;
+      // Add validation
+      chrome.storage.local.set({ newSetting: newSetting }).then(() => {
+        // ... existing code
+      });
+    }
+    ```
+  </Step>
+  <Step title="Update script.js load() function">
+    ```javascript
+    function load() {
+      chrome.storage.local.get('newSetting', function (result) {
+        document.getElementById('new-setting').value = result.newSetting || 'default';
+      });
+    }
+    ```
+  </Step>
+  <Step title="Use setting in background.js">
+    ```javascript
+    chrome.storage.local.get('newSetting', function (result) {
+      const newSetting = result.newSetting;
+      // Use the setting in your logic
+    });
+    ```
+  </Step>
+</Steps>
+
+### Improving the Tab Closing Logic
+
+The current implementation in `background.js` closes the oldest tabs (lowest indices). To change this behavior:
+
+```javascript background.js
+// Current: Close oldest tabs
+for (let i = 0; i < tabs.length - cantidadTabs; i++) {
+    chrome.tabs.remove(tabs[i].id, function () { });
+}
+
+// Alternative: Close newest tabs
+for (let i = tabs.length - 1; i >= cantidadTabs; i--) {
+    chrome.tabs.remove(tabs[i].id, function () { });
+}
+
+// Alternative: Close tabs by last accessed time
+tabs.sort((a, b) => a.lastAccessed - b.lastAccessed);
+for (let i = 0; i < tabs.length - cantidadTabs; i++) {
+    chrome.tabs.remove(tabs[i].id, function () { });
+}
+```
+
+<Note>
+  Consider making the closing strategy a user-configurable option!
+</Note>
+
+### Refactoring Nested Callbacks
+
+The current `background.js` uses nested callbacks. Consider refactoring to async/await:
+
+```javascript background.js
+// Current nested callback style
+chrome.storage.local.get('fs', function (result) {
+    fs = result.fs;
+    chrome.storage.local.get('tabsallow', function (result) {
+        cantidadTabs = result.tabsallow;
+        // ... more nesting
+    });
+});
+
+// Refactored with async/await
+chrome.tabs.onCreated.addListener(async function (tab) {
+    const tabs = await chrome.tabs.query({});
+    const { fs } = await chrome.storage.local.get('fs');
+    
+    if (!fs) return;
+    
+    const { tabsallow } = await chrome.storage.local.get('tabsallow');
+    
+    if (tabsallow >= 2 && tabs.length > tabsallow) {
+        for (let i = 0; i < tabs.length - tabsallow; i++) {
+            try {
+                await chrome.tabs.remove(tabs[i].id);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+});
+```
+
+<Info>
+  Chrome Extension APIs support Promises as of Chrome 88+, making async/await available.
+</Info>
+
+## Feature Ideas & Improvements
+
+Looking for contribution ideas? Consider these enhancements:
+
+### Priority Improvements
+
+<Accordion title="Add tab whitelist feature">
+  Allow users to whitelist certain domains that should never be closed:
+  - Add domain input field in popup
+  - Store whitelist in `chrome.storage.local`
+  - Check tab URL before closing in background.js
+  - Use `chrome.tabs` permission to access `tab.url`
+</Accordion>
+
+<Accordion title="Improve tab closing strategy">
+  Instead of always closing oldest tabs:
+  - Add option to close by last accessed time
+  - Add option to close duplicates first
+  - Add option to never close pinned tabs
+  - Make strategy user-configurable
+</Accordion>
+
+<Accordion title="Internationalization (i18n)">
+  The UI currently has Spanish text mixed with English:
+  - Implement `chrome.i18n` API
+  - Create `_locales/` directory with translations
+  - Support multiple languages
+  - Update popup.html to use `chrome.i18n.getMessage()`
+</Accordion>
+
+<Accordion title="Statistics and reporting">
+  Track and display tab closing statistics:
+  - Count tabs closed per day/week
+  - Show most commonly closed domains
+  - Display in popup or separate page
+  - Store in `chrome.storage.local`
+</Accordion>
+
+<Accordion title="Improved error handling">
+  - Add user-visible error messages
+  - Handle edge cases (all pinned tabs, protected tabs)
+  - Add retry logic for failed API calls
+  - Log errors to storage for debugging
+</Accordion>
+
+### UI/UX Improvements
+
+- Add dark mode support
+- Improve toggle switch accessibility
+- Add keyboard shortcuts
+- Show preview of which tabs would be closed
+- Add undo functionality
+- Improve success message animation
+
+### Code Quality
+
+- Refactor nested callbacks to async/await
+- Add JSDoc comments
+- Create unit tests
+- Add ESLint configuration
+- Remove commented-out code
+- Improve variable naming (e.g., `fs` → `isEnabled`, `cantidadTabs` → `tabLimit`)
+
+## Submission Guidelines
+
+### Before Submitting a PR
+
+<Steps>
+  <Step title="Test Thoroughly">
+    Complete the manual testing checklist above
+  </Step>
+  <Step title="Check for Errors">
+    No console errors in either service worker or popup
+  </Step>
+  <Step title="Update Version">
+    If appropriate, increment version in `manifest.json`
+  </Step>
+  <Step title="Clean Up Code">
+    Remove debugging console.log statements, commented code, etc.
+  </Step>
+  <Step title="Write Clear Commit Messages">
+    Use descriptive commit messages that explain the "why" not just the "what"
+  </Step>
+</Steps>
+
+### Pull Request Template
+
+When opening a PR, include:
+
+```markdown
+## Description
+Brief description of what this PR does
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Enhancement
+- [ ] Documentation update
+
+## Testing
+- [ ] Tested in Chrome (version: ___)
+- [ ] No console errors
+- [ ] Popup loads correctly
+- [ ] Settings persist
+- [ ] Tab closing works as expected
+
+## Screenshots
+If UI changes, include before/after screenshots
+
+## Additional Notes
+Any other context or information
+```
+
+### Code Review Process
+
+After submitting:
+
+1. **Automated checks**: Ensure any CI checks pass
+2. **Maintainer review**: A project maintainer will review your code
+3. **Feedback**: Address any requested changes
+4. **Approval**: Once approved, your PR will be merged
+5. **Release**: Changes will be included in the next release
+
+<Note>
+  Be patient! Maintainers review PRs in their spare time. Expect 1-7 days for initial review.
+</Note>
+
+## Chrome Web Store Publishing
+
+<Warning>
+  Only project maintainers can publish to the Chrome Web Store. Contributors should focus on code contributions.
+</Warning>
+
+For maintainers, the publishing process:
+
+<Steps>
+  <Step title="Update Version">
+    Increment version in `manifest.json` following [semantic versioning](https://semver.org/)
+  </Step>
+  <Step title="Create Release Package">
+    Zip all extension files (excluding .git, README, etc.)
+  </Step>
+  <Step title="Upload to Chrome Web Store Developer Dashboard">
+    Navigate to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+  </Step>
+  <Step title="Submit for Review">
+    Google reviews extensions before publishing (usually 1-3 days)
+  </Step>
+</Steps>
+
+## Getting Help
+
+If you need assistance:
+
+- **Documentation**: Review the [Technical Architecture](/development/architecture) page
+- **Issues**: Check existing GitHub issues for similar problems
+- **Questions**: Open a GitHub issue with the "question" label
+- **Chrome Extension Docs**: [Official Chrome Extension Documentation](https://developer.chrome.com/docs/extensions/)
+
+## Code of Conduct
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Focus on the code, not the person
+- Help others learn and grow
+- Follow project guidelines
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same license as the project.
+
+---
+
+**Thank you for contributing to Tab Closer!** Your efforts help make the web browsing experience better for everyone.

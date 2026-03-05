@@ -1,0 +1,163 @@
+---
+title: 'Getting Started'
+description: 'Quick start guide to install and configure the Tab Closer Chrome extension'
+---
+
+## Overview
+
+Tab Closer is a Chrome extension that automatically manages your open tabs by limiting the maximum number of tabs you can have open at once. When you exceed your configured limit, the oldest tabs are automatically closed to maintain your desired tab count.
+
+<Tip>
+This extension is perfect for users who tend to accumulate too many tabs and want to maintain a clean, organized browsing experience.
+</Tip>
+
+## Installation
+
+<Steps>
+  <Step title="Download the Extension">
+    Download the Tab Closer extension files from the repository or Chrome Web Store.
+  </Step>
+  
+  <Step title="Load the Extension in Chrome">
+    If installing from source:
+    
+    1. Open Chrome and navigate to `chrome://extensions/`
+    2. Enable "Developer mode" in the top right corner
+    3. Click "Load unpacked" and select the extension directory
+    
+    The extension icon will appear in your Chrome toolbar.
+  </Step>
+  
+  <Step title="Configure Your Settings">
+    Click the extension icon to open the popup and configure your tab limit.
+  </Step>
+</Steps>
+
+## Quick Configuration
+
+Once installed, you'll see a simple popup interface with two main controls:
+
+<Accordion title="Enable/Disable Toggle">
+  The ON/OFF switch at the top of the popup controls whether the extension is actively monitoring and closing tabs. When enabled (green "ON"), the extension will automatically close excess tabs. When disabled (red "OFF"), all tabs will remain open regardless of your limit.
+  
+  ```javascript
+  // The extension checks this value before closing tabs
+  chrome.storage.local.get('fs', function (result) {
+      fs = result.fs;
+      if (fs) {
+          // Extension is enabled, proceed with tab management
+      }
+  });
+  ```
+</Accordion>
+
+<Accordion title="Tab Limit Setting">
+  The number input allows you to set the maximum number of tabs allowed. This value must be at least **2 tabs**.
+  
+  ```javascript
+  // Minimum validation in script.js
+  const tabsallow = document.getElementById('tabsallow').value;
+  if(tabsallow >= 2){
+    chrome.storage.local.set({ fs: checkbox.checked }).then(() => {
+      chrome.storage.local.set({ tabsallow: tabsallow }).then(() => {
+        document.getElementById("labelverde").style.visibility="visible";
+      });
+    });
+  }else{
+    alert('La cantidad debe ser mayor que uno!')
+  }
+  ```
+</Accordion>
+
+## Setting Your First Tab Limit
+
+<Steps>
+  <Step title="Click the Extension Icon">
+    Open the Tab Closer popup by clicking the extension icon in your Chrome toolbar.
+  </Step>
+  
+  <Step title="Enable the Extension">
+    Make sure the toggle switch is set to "ON" (green). This activates the automatic tab closing feature.
+  </Step>
+  
+  <Step title="Set Your Tab Limit">
+    Enter a number in the "Cantidad de Tabs permitidas (2+)" field. For example:
+    
+    - **5 tabs** - Good for focused work
+    - **10 tabs** - Balanced for general browsing
+    - **20 tabs** - More relaxed tab management
+    
+    <Warning>
+    The minimum value is 2 tabs. The extension will show an alert if you try to set a lower limit.
+    </Warning>
+  </Step>
+  
+  <Step title="Save Your Settings">
+    Click the "Save" button. You'll see a green "Saved!" confirmation message appear.
+  </Step>
+</Steps>
+
+## Testing Your Configuration
+
+After saving your settings, test the extension:
+
+<CodeGroup>
+```text Example: 5 Tab Limit
+Current tabs: 3
+Action: Open 3 new tabs
+Result: Oldest tabs are automatically closed, keeping only 5 tabs open
+```
+
+```text Example: Disabled Extension
+Toggle: OFF
+Current tabs: 20
+Action: Open new tabs
+Result: No tabs are closed, extension is inactive
+```
+</CodeGroup>
+
+<Note>
+The extension monitors tab creation in real-time. Whenever you open a new tab, it checks your current tab count against your configured limit and automatically closes the oldest tabs if necessary.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/guides/configuration">
+    Learn about all configuration options and advanced settings
+  </Card>
+  
+  <Card title="How It Works" icon="code" href="/guides/how-it-works">
+    Understand the technical implementation and Chrome API usage
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<Accordion title="Extension not closing tabs">
+  1. Check that the toggle switch is set to "ON"
+  2. Verify your tab limit is set to at least 2
+  3. Click "Save" after making any changes
+  4. Try reloading the extension from `chrome://extensions/`
+</Accordion>
+
+<Accordion title="Can't set a limit below 2">
+  This is intentional. The extension requires a minimum of 2 tabs to function properly and prevent accidentally closing all your tabs.
+  
+  ```javascript
+  // Validation in background.js
+  if (cantidadTabs >= 2) {
+      if (tabs.length > cantidadTabs) {
+          // Close excess tabs
+      }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Settings not persisting">
+  The extension uses `chrome.storage.local` to persist settings. If settings aren't saving:
+  
+  1. Check Chrome's storage permissions for the extension
+  2. Try removing and reinstalling the extension
+  3. Check the browser console for any error messages
+</Accordion>

@@ -1,0 +1,380 @@
+---
+title: 'Configuration'
+description: 'Detailed guide to configuring Tab Closer settings and understanding storage options'
+---
+
+## Configuration Overview
+
+Tab Closer stores all configuration in Chrome's local storage using the `chrome.storage.local` API. The extension uses two key storage values to manage its behavior.
+
+## Storage Keys
+
+<Accordion title="fs (Feature Switch)">
+  **Type:** `boolean`
+  
+  **Purpose:** Controls whether the extension is actively monitoring and closing tabs.
+  
+  **Values:**
+  - `true` - Extension is enabled (toggle shows "ON")
+  - `false` - Extension is disabled (toggle shows "OFF")
+  
+  **Code Implementation:**
+  
+  ```javascript
+  // Saving the feature switch state
+  chrome.storage.local.set({ fs: checkbox.checked }).then(() => {
+    // State saved successfully
+  });
+  
+  // Loading the feature switch state
+  chrome.storage.local.get('fs', function (result) {
+      fs = result.fs;
+      if(!fs){
+        checkbox.checked = false;
+      }
+  });
+  ```
+  
+  <Tip>
+  The `fs` key stands for "feature switch" and acts as the master on/off control for the entire extension.
+  </Tip>
+</Accordion>
+
+<Accordion title="tabsallow (Tab Limit)">
+  **Type:** `number`
+  
+  **Purpose:** Defines the maximum number of tabs allowed to be open simultaneously.
+  
+  **Constraints:**
+  - Minimum value: `2`
+  - Maximum value: No enforced maximum (limited by browser capabilities)
+  - Default value: `2` (on first load)
+  
+  **Code Implementation:**
+  
+  ```javascript
+  // Saving the tab limit
+  const tabsallow = document.getElementById('tabsallow').value;
+  if(tabsallow >= 2){
+    chrome.storage.local.set({ tabsallow: tabsallow }).then(() => {
+      document.getElementById("labelverde").style.visibility="visible";
+    });
+  }else{
+    alert('La cantidad debe ser mayor que uno!')
+  }
+  
+  // Loading the tab limit
+  chrome.storage.local.get('tabsallow', function (result) {
+    cantidadTabs = result.tabsallow;
+    document.getElementById('tabsallow').value = parseInt(cantidadTabs);
+  });
+  ```
+</Accordion>
+
+## Configuration Interface
+
+The extension popup provides a simple, compact interface for configuration:
+
+### UI Components
+
+<Tabs>
+  <Tab title="Toggle Switch">
+    The flip switch at the top of the popup controls the `fs` storage value.
+    
+    **HTML Structure:**
+    ```html
+    <div class="flipswitch">
+        <input type="checkbox" name="flipswitch" class="flipswitch-cb" id="fs" checked>
+        <label class="flipswitch-label" for="fs">
+            <div class="flipswitch-inner"></div>
+            <div class="flipswitch-switch"></div>
+        </label>
+    </div>
+    ```
+    
+    **Visual States:**
+    - **ON (Checked):** Green background with "ON" text
+    - **OFF (Unchecked):** Red background with "OFF" text
+    
+    **CSS Styling:**
+    ```css
+    .flipswitch-inner:before {
+      content: "ON";
+      padding-left: 12px;
+      background-color: #029907;
+      color: #FFFFFF;
+    }
+    .flipswitch-inner:after {
+      content: "OFF";
+      padding-right: 12px;
+      background-color: #EB0202;
+      color: #FFFFFF;
+      text-align: right;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Number Input">
+    The number input field allows users to set their desired tab limit.
+    
+    **HTML Structure:**
+    ```html
+    <h5>Cantidad de Tabs permitidas (2+)</h5>
+    <div>
+        <input style="margin: 0 auto; display: block;" 
+               type="number" 
+               class="css-input" 
+               id="tabsallow"/>
+    </div>
+    ```
+    
+    **Features:**
+    - Type: `number` input with spinner controls
+    - Centered display with custom styling
+    - Validates minimum value of 2 on save
+    
+    **CSS Styling:**
+    ```css
+    .css-input {
+      padding: 5px;
+      font-size: 16px;
+      border-width: 1px;
+      border-color: #CCCCCC;
+      background-color: #FFFFFF;
+      color: #000000;
+      border-style: solid;
+      border-radius: 9px;
+      box-shadow: 0px 0px 4px rgba(66,66,66,.29);
+      text-shadow: 0px 0px 5px rgba(66,66,66,.75);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Save Button">
+    The save button persists settings to Chrome storage.
+    
+    **HTML Structure:**
+    ```html
+    <button style="margin: 0 auto; display: block;" 
+            class="testbutton" 
+            id="button">
+        Save
+    </button>
+    ```
+    
+    **JavaScript Handler:**
+    ```javascript
+    const button = document.getElementById('button')
+    button.addEventListener('click', function() {
+      save();
+    });
+    ```
+    
+    **Feedback Indicator:**
+    ```html
+    <div id="labelverde" 
+         style="color: rgb(8, 136, 8); text-align: center; visibility: hidden;">
+        <h4>Saved!</h4>
+    </div>
+    ```
+    
+    The green "Saved!" message appears after successful configuration save.
+  </Tab>
+</Tabs>
+
+## Validation Rules
+
+<Warning>
+**Critical Validation:** The extension enforces a minimum tab limit of 2 to prevent accidentally closing all browser tabs.
+</Warning>
+
+### Tab Limit Validation
+
+<CodeGroup>
+```javascript Validation on Save (script.js)
+function save()
+{
+  const tabsallow = document.getElementById('tabsallow').value;
+  if(tabsallow >= 2){
+    chrome.storage.local.set({ fs: checkbox.checked }).then(() => {
+      chrome.storage.local.set({ tabsallow: tabsallow }).then(() => {
+        document.getElementById("labelverde").style.visibility="visible";
+      });
+    });
+  }else{
+    alert('La cantidad debe ser mayor que uno!')
+  }
+}
+```
+
+```javascript Validation on Execution (background.js)
+chrome.storage.local.get('tabsallow', function (result) {
+    cantidadTabs = result.tabsallow;
+    // Validate minimum before processing
+    if (cantidadTabs >= 2) {
+        if (tabs.length > cantidadTabs) {
+            // Safe to close excess tabs
+            for (let i = 0; i < tabs.length - cantidadTabs; i++) {
+                try {
+                    chrome.tabs.remove(tabs[i].id, function () { });
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+    }
+});
+```
+</CodeGroup>
+
+## Configuration Workflow
+
+The complete save workflow follows this sequence:
+
+<Steps>
+  <Step title="User Input">
+    User adjusts the toggle switch and/or enters a tab limit value in the popup interface.
+  </Step>
+  
+  <Step title="Click Save">
+    User clicks the "Save" button, triggering the click event listener.
+  </Step>
+  
+  <Step title="Validation">
+    The `save()` function validates that `tabsallow >= 2`:
+    
+    - **Valid:** Proceed to save
+    - **Invalid:** Show alert "La cantidad debe ser mayor que uno!"
+  </Step>
+  
+  <Step title="Storage Save">
+    Settings are saved to `chrome.storage.local` in sequence:
+    
+    1. Save `fs` (boolean) value
+    2. Save `tabsallow` (number) value
+    3. Show "Saved!" confirmation message
+  </Step>
+  
+  <Step title="Background Processing">
+    The background script (`background.js`) reads these values whenever a new tab is created and applies the tab limit if enabled.
+  </Step>
+</Steps>
+
+## Loading Settings
+
+The extension automatically loads saved settings when the popup is opened:
+
+```javascript
+function load() {
+  let fs = "";
+  let cantidadTabs = 2;
+  
+  // Load feature switch state
+  chrome.storage.local.get('fs', function (result) {
+      fs = result.fs;
+      if(!fs){
+        checkbox.checked = false;
+      }
+  });
+  
+  // Load tab limit (defaults to 2 if not set)
+  chrome.storage.local.get('tabsallow', function (result) {
+    cantidadTabs = result.tabsallow;
+    document.getElementById('tabsallow').value = parseInt(cantidadTabs);
+  });
+}
+
+// Execute on popup load
+load();
+```
+
+<Note>
+The default tab limit is 2 when the extension is first installed or if no value has been saved yet.
+</Note>
+
+## Popup Dimensions
+
+The popup has a fixed size optimized for the configuration interface:
+
+```css
+body{
+    width: 200px;
+    height: 240px;
+    background-color: aliceblue;
+}
+```
+
+## Advanced Configuration
+
+<Accordion title="Modifying Default Values">
+  To change the default tab limit from 2 to another value, modify the `load()` function in `script.js`:
+  
+  ```javascript
+  function load() {
+    let fs = "";
+    let cantidadTabs = 10; // Change this default value
+    // ... rest of function
+  }
+  ```
+  
+  <Warning>
+  Remember that the minimum validation of 2 tabs is still enforced in both the save function and background script.
+  </Warning>
+</Accordion>
+
+<Accordion title="Changing the Minimum Tab Limit">
+  To modify the minimum allowed tab limit, update the validation in both files:
+  
+  **script.js:**
+  ```javascript
+  if(tabsallow >= 3){ // Changed from 2 to 3
+    // save logic
+  }
+  ```
+  
+  **background.js:**
+  ```javascript
+  if (cantidadTabs >= 3) { // Changed from 2 to 3
+    // tab closing logic
+  }
+  ```
+</Accordion>
+
+<Accordion title="Debugging Storage Values">
+  To inspect current storage values, open the extension popup, then:
+  
+  1. Right-click in the popup and select "Inspect"
+  2. In the Console, run:
+  
+  ```javascript
+  // Check feature switch
+  chrome.storage.local.get('fs', function (result) {
+    console.log('Feature Switch (fs):', result.fs);
+  });
+  
+  // Check tab limit
+  chrome.storage.local.get('tabsallow', function (result) {
+    console.log('Tab Limit (tabsallow):', result.tabsallow);
+  });
+  ```
+</Accordion>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Conservative" icon="shield">
+    Begin with a lower tab limit (5-10) and increase if needed. This helps identify your actual usage patterns.
+  </Card>
+  
+  <Card title="Disable When Needed" icon="toggle-off">
+    Use the ON/OFF toggle to temporarily disable the extension during research sessions when you need many tabs.
+  </Card>
+  
+  <Card title="Regular Reviews" icon="clock">
+    Periodically review your tab limit setting to ensure it matches your current workflow needs.
+  </Card>
+  
+  <Card title="Test Changes" icon="flask">
+    After changing settings, open a few tabs to verify the extension behaves as expected.
+  </Card>
+</CardGroup>
